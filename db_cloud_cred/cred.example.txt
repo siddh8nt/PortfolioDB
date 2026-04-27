@@ -1,0 +1,4 @@
+name: <your-db-host>
+port: <your-db-port>
+username: <your-db-username>
+password: <your-db-password>

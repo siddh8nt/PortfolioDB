@@ -1,0 +1,41 @@
+Run my Java app from this repository using Maven, and make it run correctly on the first try with no retries.
+
+Workspace root on my machine is:
+C:\Users\<username>\OneDrive\Desktop\portfoliodb
+
+Important repo detail:
+There is a root .mvn/maven.config that contains:
+-pl
+gui
+So you must run from workspace root through the reactor, not by forcing -f gui\pom.xml.
+
+DB credentials are already present in:
+C:\Users\<username>\OneDrive\Desktop\portfoliodb\db_cloud_cred\cred.txt
+
+Do these steps in order, in ONE PowerShell terminal session and do not skip any step:
+1) Set location to the workspace root path above.
+2) Verify required files exist with Test-Path:
+   - .\pom.xml
+   - .\gui\pom.xml
+   - .\db_cloud_cred\cred.txt
+   If any are missing, stop and print a clear error.
+3) Verify Java and Maven are available with:
+   java -version
+   mvn -version
+4) Read db_cloud_cred\cred.txt and set environment variables in the same terminal session:
+   - DB_URL from host+port as jdbc:mysql://<host>:<port>/portfoliodb?useSSL=true&requireSSL=true&verifyServerCertificate=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+   - DB_USER from username
+   - DB_PASSWORD from password
+5) Compile from workspace root (reactor-aware):
+   mvn -q -DskipTests compile
+6) Run GUI module from workspace root:
+   mvn -pl gui exec:java
+7) If mvn is not recognized, ask for Maven install path and use:
+   & "<maven install path>\bin\mvn.cmd" -q -DskipTests compile
+   & "<maven install path>\bin\mvn.cmd" -pl gui exec:java
+
+Rules:
+- Do not run from random folders.
+- Keep compile and run in the same terminal session.
+- Do not use -f gui\pom.xml for this repo because root maven.config already selects module gui.
+- If any step fails, stop and report exact error plus the next fix command.
