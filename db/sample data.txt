@@ -1,0 +1,67 @@
+USE portfoliodb;
+
+-- =========================
+-- INSERT DATA
+-- =========================
+
+INSERT INTO investors (name, email)
+VALUES 
+('Siddhant', 'sid@gmail.com'),
+('Rahul', 'rahul@gmail.com');
+
+INSERT INTO assets (name, type)
+VALUES 
+('Bitcoin', 'Crypto'),
+('Tesla', 'Stock');
+
+INSERT INTO transactions (investor_id, asset_id, quantity, price, transaction_date)
+VALUES
+(1, 1, 0.5, 30000, '2024-01-01'),
+(1, 2, 2, 200, '2024-02-01'),
+(2, 1, 0.2, 28000, '2024-03-01');
+
+INSERT INTO prices (asset_id, current_price)
+VALUES
+(1, 40000),
+(2, 250);
+
+-- =========================
+-- BASIC SQL
+-- =========================
+SELECT * FROM investors;
+
+-- =========================
+-- INTERMEDIATE SQL
+-- =========================
+SELECT * FROM transactions WHERE quantity > 0;
+
+-- =========================
+-- COMPLEX QUERY (JOIN)
+-- =========================
+SELECT 
+    i.name,
+    a.name,
+    t.quantity,
+    t.price
+FROM transactions t
+JOIN investors i ON t.investor_id = i.investor_id
+JOIN assets a ON t.asset_id = a.asset_id;
+
+-- =========================
+-- AGGREGATION
+-- =========================
+SELECT 
+    asset_id,
+    SUM(quantity)
+FROM transactions
+GROUP BY asset_id;
+
+-- =========================
+-- FUNCTION CALL
+-- =========================
+SELECT total_investment(1);
+
+-- =========================
+-- PROCEDURE CALL
+-- =========================
+CALL get_portfolio();

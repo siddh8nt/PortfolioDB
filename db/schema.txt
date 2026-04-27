@@ -1,0 +1,110 @@
+-- =========================
+-- DATABASE
+-- =========================
+CREATE DATABASE portfoliodb;
+USE portfoliodb;
+
+-- =========================
+-- INVESTOR TABLE
+-- =========================
+CREATE TABLE investors (
+    investor_id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE
+);
+
+-- =========================
+-- ASSETS TABLE
+-- =========================
+CREATE TABLE assets (
+    asset_id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100),
+    type VARCHAR(20) CHECK (type IN ('Stock','Crypto','ETF','Bond','Mutual Fund'))
+);
+
+-- =========================
+-- TRANSACTIONS TABLE
+-- =========================
+CREATE TABLE transactions (
+    transaction_id INT PRIMARY KEY AUTO_INCREMENT,
+    investor_id INT,
+    asset_id INT,
+    transaction_type VARCHAR(4) NOT NULL DEFAULT 'BUY' CHECK (transaction_type IN ('BUY','SELL')),
+    quantity DECIMAL(10,2) CHECK (quantity > 0),
+    price DECIMAL(10,2) CHECK (price > 0),
+    transaction_date DATE,
+
+    FOREIGN KEY (investor_id) REFERENCES investors(investor_id),
+    FOREIGN KEY (asset_id) REFERENCES assets(asset_id)
+);
+
+-- =========================
+-- PRICE TABLE
+-- =========================
+CREATE TABLE prices (
+    asset_id INT PRIMARY KEY,
+    current_price DECIMAL(10,2),
+
+    FOREIGN KEY (asset_id) REFERENCES assets(asset_id)
+);
+
+-- =========================
+-- TRIGGER (Constraint topic)
+-- =========================
+DELIMITER //
+
+CREATE TRIGGER check_quantity
+BEFORE INSERT ON transactions
+FOR EACH ROW
+BEGIN
+    IF NEW.quantity <= 0 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Quantity must be positive';
+    END IF;
+END //
+
+DELIMITER ;
+
+-- =========================
+-- FUNCTION (PL/SQL topic)
+-- =========================
+DELIMITER //
+
+CREATE FUNCTION total_investment(inv_id INT)
+RETURNS DECIMAL(10,2)
+DETERMINISTIC
+BEGIN
+    DECLARE total DECIMAL(10,2);
+
+    SELECT SUM(quantity * price)
+    INTO total
+    FROM transactions
+    WHERE investor_id = inv_id;
+
+    RETURN total;
+END //
+
+DELIMITER ;
+
+-- =========================
+-- PROCEDURE (PL/SQL topic)
+-- =========================
+DELIMITER //
+
+CREATE PROCEDURE get_portfolio()
+BEGIN
+    SELECT 
+        i.name,
+        a.name AS asset,
+        SUM(t.quantity) AS total_qty,
+        SUM(t.quantity * t.price) AS investment,
+        SUM(t.quantity * p.current_price) AS current_value,
+        SUM(t.quantity * p.current_price) - SUM(t.quantity * t.price) AS profit_loss
+    FROM transactions t
+    JOIN investors i ON t.investor_id = i.investor_id
+    JOIN assets a ON t.asset_id = a.asset_id
+    JOIN prices p ON a.asset_id = p.asset_id
+    GROUP BY i.name, a.name;
+END //
+
+DELIMITER ;
